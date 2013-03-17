@@ -23,6 +23,8 @@ class RestUtils
 			// gets are easy...
 			case 'get':
 				$data = $_GET;
+				//echo("here comes datastring \n\n");
+				//print_r($data);
 				break;
 			// so are posts
 			case 'post':
@@ -36,12 +38,14 @@ class RestUtils
 				// variables in the current scope.
 				//assumes JSON put starting like {"data": {"the": 123} }
 				$thefile=file_get_contents("php://input");
-				echo $thefile;
+				//echo("On server in processRequest() of rest.php. data is gotten from file_get_contents()\n");
+				//echo $thefile;
 				$json = $thefile;
 				$return_obj->setJson($json);
 				//the true parameter forces it to decode to array instead of object
 				//$thearr = (array) json_decode($thefile) only converts the outer object
 				$data = json_decode($thefile,true);	
+				//print_r($data);
 				break;
 		}
 		$return_obj->setData($data);
