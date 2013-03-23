@@ -1,21 +1,25 @@
 <?php
+include 'rest.php';
+include  '/usr/local/lib/tm/db.php';
 echo header("Content-type: text/plain");
 //$qs=$_SERVER['QUERY_STRING'];
 //echo("duck\n\n ".$qs);
 //echo("\n\n".$_GET['room']."\n\n");
-include 'rest.php';
-include  '/usr/local/lib/tm/db.php';
+
 
 $req = RestUtils::processRequest();
 $path =$req->getPathArr();
-$type  = $path[1];//feed or prog or
+$now = $req->getTimeStamp();
+$type  = $path[1];//feed or prog or boho
 $feed=$path[2];	//the feed number
 $data=$req->getData();
 $db = new db($path[0]);
+$params = array();
+$params['MAXCKTS']=12;
 //$db->setDb($path[0]);
 //$retSetptStr="\n\n<[1180,3182,4173,5174,6176]>\n";
 $retSetptStr="<[130,130,130,0 ,0,130,0,0,160,169, 170,190]>\n";
-//just a bunch of not really needed stuff
+//echo($req->getMethod());
 /*
 198.23.156.78/hsc/feed/80302?room=all
 
@@ -72,8 +76,9 @@ switch($req->getMethod())
 	case 'post':
 		/*
 		POST request to /feed – Create a new feed
-		POST request to /prog/loc -create a new prog for location
+		POST request to /prog/feed -create a new prog for feed
 		POST request to /prog/ -create a new location	*/
+		print_r($data);
 		echo("a post request"); 
 		break;
 	case 'put':
@@ -85,13 +90,17 @@ switch($req->getMethod())
 		switch($type){
 			case 'feed':
 				echo("\nin case:put, case:feed of index.php, sending this back to microcontroller\n");
+				/*
+				getTodayLTEnow();
+				*/
+				ckHolds($db, $req);
 				$se = getSetptArr($db, $path);
 				echo $se;
 				zeroSetptArr($db, $path);					
 				//echo($retSetptStr);//"\n<0151,1152,2153>\n"
 				/*PUT request to /feed/80308 – Update feed with additional data */	
 				$timestamp = $req->getTimeStamp();				
-				$tbo = new tbl("feed", $db);	
+				$tbo = new tbl("feed", $db);
 				$data=$req->getData();
 				//echo "soulld be about to print data";	
 				//print_r($data);	
@@ -99,7 +108,7 @@ switch($req->getMethod())
 				$jibr=json_encode($ibr[0]);
 				//echo($jibr);	
 				$i=0;	
-				for($i=0;$i<12;$i++){						
+				for($i=0;$i<$params['MAXCKTS'];$i++){						
 					$temp= $data['data']['temp'][$i];
 					$relay = $data['data']['relay'][$i];
 					$setpt = $data['data']['setpt'][$i];
@@ -125,29 +134,30 @@ switch($req->getMethod())
 					}
 				}					
 				break;	
+			case 'boho':
+				/*	PUT request to /boho/80302/sensor# – place hold for feed's sensor
+					PUT request to /boho/80302 – place holds for all sensors for feed */			
+				$sensor=$path[3];
+				echo($sensor." yo in case:boho of index.php");
+				//$data=json_decode('{"start":1363707975,"finish":1363688100,"setpt":167}',true);
+				print_r($data);
+				insertHold($db,$path,$data);				
+				echo $setptJ;			
+				break;	
 			case 'prog':
-				//$blank = array(0,0,0,0,0,0,0,0,0,0,0,0); //MAXPTS length array
-				//print_r($blank);
-				//$setptArr = $blank;
 				/*	PUT request to /prog/80302/sensor# – Update setpt for feed's sensor
 					PUT request to /prog/80302 – Update all sensor for feed */			
 				$sensor=$path[3];
-				//echo $sensor;
-				if (strlen($sensor)>0){//new setpoint for 1 sensor
-					//echo($sensor." yo in case:prog of index.php");
-					updateSetptArr($db, $path, $data);					
-					//$setptArr[$sensor]=$data['setpt']+0;
-					//$setptJ = "\n<".json_encode($setptArr).">\n";	
-					echo $setptJ;			
-				}else{//
+				echo $sensor;
+				if (strlen($sensor)>0){//  put: /prog/80302/4      from:hold.php
+					echo($sensor." yo in case:boho of index.php");
+					//$data=json_decode('{"start":1363707975,"finish":1363688100,"setpt":167}',true);
+					print_r($data);		
+				}else{//  put: /prog/80302
 					echo "in case:put case:prog /prog/80302/  setpoint array for MAXPTS sensors \n";
-					$se = getSetptArr($db, $path);
-					echo $se;
-					zeroSetptArr($db, $path);			
-					$se = getSetptArr($db, $path);
-					echo $se;
+					print_r($data);
 				}
-				break;	
+				break;				
 		}
 		echo("a put request has been put\n\n"); 
 		break;	
@@ -155,9 +165,23 @@ switch($req->getMethod())
 	/*			
 		DELETE request to /feed/80308 – Delete feed
 		DELETE request to /prog/loc – Delete all progs for feed
-		DELETE request to /prog/80308 – Delete all progs for feed */			
-		echo("a delete request\n\n"); 
-		break;	
+		DELETE request to /prog/80308 – Delete all progs for feed 
+		DELETE request to /boho/80308 – Delete all boosts or holds
+		DELETE request to /boho/80308/4 – Delete boost/hold for ckt */
+		switch($type){
+			case 'feed':					
+				echo("a delete:feed request\n\n"); 
+				break;	
+			case 'prog':					
+				echo("a delete:prog request\n\n"); 
+				break;	
+			case 'boho':	
+				$ckt=$path[3];
+				
+				delHold($db, $feed, $ckt);		
+				echo($feed. " a delete:boho request".$ckt."\n\n"); 
+				break;									
+		}
 }
 
 function getRoomList($db, $feed){
@@ -245,11 +269,7 @@ ORDER BY orde ';
 	}	
 }
 
-function updateSetptArr($db, $path,$data){
-	$setpt = $data['setpt'];
-	$feed =$path[2];
-	$sensor = $path[3];
-	//echo $sensor;
+function updateSetptArr($db, $feed, $sensor,$setpt){
 	try {
 		$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
 		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -293,7 +313,93 @@ function zeroSetptArr($db, $path){
 	} catch(PDOException $e) {
 	echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
 	}	
+}
+
+function delProg($db,$path){
+	$feed =$path[2];
+	try {
+		$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
+		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$sql  ='DELETE FROM `progs` WHERE `feed`="'.$feed.'" AND `ver` = "current"'  ;
+		$stmt = $dbh->prepare($sql);
+		$stmt->execute();
+	} catch(PDOException $e) {
+		echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
+	}	
 }	
+function newProg($db, $path, $data){
+	
+}
+
+function getTodayLTEnow($db, $path, $data){
+	updateSetptArr($db, $feed, $ckt,$setpt);
+}
+function ckHolds($db, $req){
+	echo("in ckHolds ");
+	$status=array();
+	$path =$req->getPathArr();
+	$now = $req->getTimeStamp();
+	$type  = $path[1];//feed or prog or
+	$feed=$path[2];	//the feed number
+	echo ($now);
+	//$data=$req->getData();	
+	try {
+		$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
+		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$sql  = 'SELECT DISTINCT `ckt`, `setpt`, `finish` FROM `holds`  WHERE feed="'.$feed.'" AND `start`<='.$now. ' AND `finish`>'.$now;
+		$stmt = $dbh->prepare($sql);
+		$stmt->execute();
+		while($result = $stmt->fetch()){
+			$ckt=$result['ckt'];
+			$setpt =$result['setpt'];
+			$finish = $result['finish'];
+			$status[$ckt]['setpt']=$setpt;
+			$status[$ckt]['finish']=$finish;
+			updateSetptArr($db, $feed, $ckt,$setpt);
+		}
+		print_r($status);
+	} catch(PDOException $e) {
+		echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
+	}	
+}
+
+function insertHold($db, $path, $data){
+	global $params;
+	$tbo = new tbl("holds", $db);
+	$data['feed']= $path[2];
+	//echo("\n in insert0Hold path[3]=".$path[3]."\n");
+	if (!strcmp(trim($path[3]),'99')){
+		//echo("pathis99");
+		for($i=0;$i<$params['MAXCKTS'];$i++){
+			echo($i);
+			$data['ckt']= $i;	
+			delHold($db, $data['feed'], $data['ckt']);
+			$tbo->setInsArr($data);
+			$tbo->pdo_insert();		
+		}	
+	}else{
+		$data['ckt']= $path[3];	
+		delHold($db, $data['feed'], $data['ckt']);
+		$tbo->setInsArr($data);
+		$tbo->pdo_insert();			
+	}
+}
+
+function delHold($db, $feed, $ckt){
+	try {
+		$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
+		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		if (!strcmp($ckt,'99')){
+			$sql  ='DELETE FROM `holds` WHERE `feed`="'.$feed.'"'  ;
+		}else{
+			$sql  ='DELETE FROM `holds` WHERE `feed`="'.$feed.'" AND `ckt` = "'.$ckt.'"'  ;
+		}
+		$stmt = $dbh->prepare($sql);
+		$stmt->execute();
+	} catch(PDOException $e) {
+		echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
+	}	
+}
 	/*
 	$data = $req->getData();  jsonArray
 json{"data": {"temp": [844, 622], "relay": [0, 1 ], "setpt": [302, 283]}}

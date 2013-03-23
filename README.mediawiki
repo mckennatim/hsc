@@ -1,5 +1,5 @@
 ====system versions -arduino+server code====
-=====version C - /hsc/index.php /services/putSetptArr.php =====
+=====version C - /hsc/index.php /services/putSetptArr.php case structure=====
 Cron calls have to build the data into the URL so they will look like:
  http://homecontrol.sitebuilt.net/services/putSetpt.php?feed=80302&type=prog&sensor=6&setpt=167
 Not a PUT but in Curl it gets converted for the rest api as a PUT with data encoded  

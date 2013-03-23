@@ -155,3 +155,35 @@ UPDATE `setptArr`  SET `setpt` = 0  WHERE `feed`=80302
 	
 UPDATE `setptArr`  SET `setpt` = 167  WHERE `feed`=80302 AND `sensor`=4
 	
+CREATE TABLE IF NOT EXISTS `holds` (
+  `id` int(12) NOT NULL AUTO_INCREMENT,
+  `feed` varchar(7) NOT NULL,
+  `ckt` varchar(5) NOT NULL,
+  `setpt` int(5) NOT NULL,
+  `start` int(10) NOT NULL,
+  `finish` int(10) NOT NULL,  	
+  PRIMARY KEY (`id`),
+  KEY `feed` (`feed`),
+  KEY `fc` (`feed`,`ckt`),
+  KEY `fcs` (`feed`,`ckt`, `start`),  	
+  KEY `start` (`start`),
+  KEY `finish` (`finish`)  	
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=300 ;
+
+CREATE TABLE IF NOT EXISTS `progs` (
+	`id` int(12) NOT NULL AUTO_INCREMENT,
+	`feed` varchar(7) NOT NULL,
+	`ver`varchar(12) NOT NULL, 
+	`day` varchar(7) NOT NULL, 	
+	`ckt` varchar(5) NOT NULL,
+	`when` int(10) NOT NULL,
+	`setpt` int(5) NOT NULL,
+	PRIMARY KEY (`id`),
+	KEY `feed` (`feed`),
+	KEY `when` (`when`),
+	KEY `fvw` (`feed`,`ver`,`when`),  	
+	KEY `ckt` (`ckt`),
+	KEY `fvc` (`feed`,`ver`,`ckt`)  	
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=500 ;
+
+DELETE FROM `progs` WHERE `feed`="80302" AND `ver` = "current" 
