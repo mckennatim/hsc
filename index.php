@@ -74,92 +74,205 @@ switch($req->getMethod())
 		}
 		break;
 	case 'post':
-		/*
+		/* a get like list query string feef=80302&type=prog
 		POST request to /feed – Create a new feed
 		POST request to /prog/feed -create a new prog for feed
 		POST request to /prog/ -create a new location	*/
+		switch($type){
+			case 'feed':
+				break;
+			case 'prog':
+				break;
+			case 'boho':
+				break;								
+		}		
 		print_r($data);
 		echo("a post request"); 
 		break;
-	case 'put':
+	case 'put'://consists of complex data structure
 	/*	PUT request to /prog/80302/sensor – Update progs for feed's sensor
 		PUT request to /prog/80302 – Update all progs for feed
 		PUT request to /prog/loc – Update progs for all locations
 		PUT request to /prog/loc/peri_study – Update progs for location	  */	
 		/*PUT request to /feed/80308 – Update feed with additional data */		
 		switch($type){
-			case 'feed':
-				echo("\nin case:put, case:feed of index.php, sending this back to microcontroller\n");
-				/*
-				getTodayLTEnow();
-				*/
-				ckHolds($db, $req);
-				$se = getSetptArr($db, $path);
-				echo $se;
-				zeroSetptArr($db, $path);					
-				//echo($retSetptStr);//"\n<0151,1152,2153>\n"
-				/*PUT request to /feed/80308 – Update feed with additional data */	
-				$timestamp = $req->getTimeStamp();				
-				$tbo = new tbl("feed", $db);
-				$data=$req->getData();
-				//echo "soulld be about to print data";	
-				//print_r($data);	
-				$ibr =getLastCktEntries($db,$feed);	//object of last entries
-				$jibr=json_encode($ibr[0]);
-				//echo($jibr);	
-				$i=0;	
-				for($i=0;$i<$params['MAXCKTS'];$i++){						
-					$temp= $data['data']['temp'][$i];
-					$relay = $data['data']['relay'][$i];
-					$setpt = $data['data']['setpt'][$i];
-					$circuit = "ckt".$i;
-					echo $i. " temp=".$temp." dtemp=".$ibr[$i]['temp'].", relay=".$relay." drelay=".$ibr[$i]['relay'].", setpt=".$setpt." dsetpt=".$ibr[$i]['setpt']."\n";			
-					//if($temp - $ibr[$i]['temp']!=0 || $relay - $ibr[$i]['relay'] !=0|| $setpt - $ibr[$i]['setpt']!=0)	
-					if($temp != $ibr[$i]['temp'] || $relay != $ibr[$i]['relay'] || $setpt != $ibr[$i]['setpt']){
-						//update database only if temp, relay or setpt have changed;
-						echo $i. " has changed and will be updated to \n";
-						$insarr=array(
-							'afeed'=>$feed, 
-							'circuit'=>$circuit,
-							"temp"=>$temp,
-							"relay"=>$relay,
-							"setpt"=>$setpt,
-							"time"=>$timestamp
-						);
-						// get prior data to see if it has changed		
-						$tbo->setInsArr($insarr);	
-						print_r($insarr);
-						//echo "before pdo_insert\n";
-						$tbo->pdo_insert();				
-					}
-				}					
-				break;	
-			case 'boho':
-				/*	PUT request to /boho/80302/sensor# – place hold for feed's sensor
-					PUT request to /boho/80302 – place holds for all sensors for feed */			
-				$sensor=$path[3];
-				echo($sensor." yo in case:boho of index.php");
-				//$data=json_decode('{"start":1363707975,"finish":1363688100,"setpt":167}',true);
-				print_r($data);
-				insertHold($db,$path,$data);				
-				echo $setptJ;			
-				break;	
-			case 'prog':
-				/*	PUT request to /prog/80302/sensor# – Update setpt for feed's sensor
-					PUT request to /prog/80302 – Update all sensor for feed */			
-				$sensor=$path[3];
-				echo $sensor;
-				if (strlen($sensor)>0){//  put: /prog/80302/4      from:hold.php
-					echo($sensor." yo in case:boho of index.php");
-					//$data=json_decode('{"start":1363707975,"finish":1363688100,"setpt":167}',true);
-					print_r($data);		
-				}else{//  put: /prog/80302
-					echo "in case:put case:prog /prog/80302/  setpoint array for MAXPTS sensors \n";
-					print_r($data);
+		case 'feed':
+			echo("\nin case:put, case:feed of index.php, sending this back to microcontroller\n");
+			/*
+			getTodayLTEnow();
+			*/
+			ckHolds($db, $req);
+			$se = getSetptArr($db, $path);
+			echo $se;
+			zeroSetptArr($db, $path);					
+			//echo($retSetptStr);//"\n<0151,1152,2153>\n"
+			/*PUT request to /feed/80308 – Update feed with additional data */	
+			$timestamp = $req->getTimeStamp();				
+			$tbo = new tbl("feed", $db);
+			$data=$req->getData();
+			//echo "soulld be about to print data";	
+			//print_r($data);	
+			$ibr =getLastCktEntries($db,$feed);	//object of last entries
+			$jibr=json_encode($ibr[0]);
+			//echo($jibr);	
+			$i=0;	
+			for($i=0;$i<$params['MAXCKTS'];$i++){						
+				$temp= $data['data']['temp'][$i];
+				$relay = $data['data']['relay'][$i];
+				$setpt = $data['data']['setpt'][$i];
+				$circuit = "ckt".$i;
+				echo $i. " temp=".$temp." dtemp=".$ibr[$i]['temp'].", relay=".$relay." drelay=".$ibr[$i]['relay'].", setpt=".$setpt." dsetpt=".$ibr[$i]['setpt']."\n";			
+				//if($temp - $ibr[$i]['temp']!=0 || $relay - $ibr[$i]['relay'] !=0|| $setpt - $ibr[$i]['setpt']!=0)	
+				if($temp != $ibr[$i]['temp'] || $relay != $ibr[$i]['relay'] || $setpt != $ibr[$i]['setpt']){
+					//update database only if temp, relay or setpt have changed;
+					echo $i. " has changed and will be updated to \n";
+					$insarr=array(
+						'afeed'=>$feed, 
+						'circuit'=>$circuit,
+						"temp"=>$temp,
+						"relay"=>$relay,
+						"setpt"=>$setpt,
+						"time"=>$timestamp
+					);
+					// get prior data to see if it has changed		
+					$tbo->setInsArr($insarr);	
+					print_r($insarr);
+					//echo "before pdo_insert\n";
+					$tbo->pdo_insert();				
 				}
-				break;				
+			}					
+			break;	
+		case 'boho':
+			/*	PUT request to /boho/80302/sensor# – place hold for feed's sensor
+				PUT request to /boho/80302 – place holds for all sensors for feed */			
+			$sensor=$path[3];
+			echo($sensor." yo in case:boho of index.php");
+			//$data=json_decode('{"start":1363707975,"finish":1363688100,"setpt":167}',true);
+			print_r($data);
+			insertHold($db,$path,$data);				
+			echo $setptJ;			
+			break;	
+		case 'prog':
+			/*	PUT request to /prog/80302/ver/ckt/day*/	
+			$progs = new tbl("progs", $db);
+			$ver=$path[3];
+			$feed=$path[2];	
+			if (strlen($path[4]==0))	{//PUT request to /prog/80302/ver/ all ckts and all days for those ckts
+				echo "PUT request to /prog/80302/ver/ all ckts and all days for those ckts deleteWhere() then pdo_insert()\n";
+				print_r(count($data['ckts'][11][5])); 
+				for ($i=0;$i<$params['MAXCKTS'];$i++){
+					for ($j=0;$j<7;$j++){
+						if(count($data['ckts'][$i][$j])>0){
+							$dc=array(
+								'feed'=>$feed, 
+								'ver'=>$ver,
+								'ckt'=>$i,
+								"day"=>$j,
+								"setpt"=>$data['ckts'][$i][$j]['setpt'],
+								"clock"=>$data['ckts'][$i][$j]['time']
+							);
+							$whereArr=array(
+								'feed'=>$feed, 
+								'ver'=>$ver,
+								'ckt'=>$i,
+								"day"=>$j
+							);	
+							//function replEntries4dc($db, $dc)
+							$progs->setWhereStr($whereArr);
+							$progs->deleteWhere();
+							$progs->setInsArr($dc);	
+							$progs->pdo_insert();	
+						}
+					}
+				}
+			}else{
+				if (!strcmp($path[4],'99')){//PUT request to /prog/80302/ver/99/5, multiple ckts for day 5
+					echo "PUT request to /prog/80302/ver/99/5, multiple ckts for day 5\n";
+					print_r(count($data['ckts'][11][5])); 
+					$day=5;
+					for ($i=0;$i<$params['MAXCKTS'];$i++){
+						if(count($data['ckts'][$i][$day])>0){
+							$dc=array(
+								'feed'=>$feed, 
+								'ver'=>$ver,
+								'ckt'=>$i,
+								"day"=>$day,
+								"setpt"=>$data['ckts'][$i][$day]['setpt'],
+								"clock"=>$data['ckts'][$i][$day]['time']
+							);
+							$whereArr=array(
+								'feed'=>$feed, 
+								'ver'=>$ver,
+								'ckt'=>$i,
+								"day"=>$day
+							);	
+							//function replEntries4dc($db, $dc)
+							$progs->setWhereStr($whereArr);
+							$progs->deleteWhere();
+							$progs->setInsArr($dc);	
+							$progs->pdo_insert();	
+						}
+					}					
+				}else {
+					if (strlen($path[5]==0))	{//PUT request to /prog/80302/ver/4/, multiple days for ckt 5
+						echo "PUT request to /prog/80302/ver/4/, multiple days for ckt 4\n";
+						print_r(count($data['ckts'][11][5])); 
+						$ckt=4;
+						for ($j=0;$j<7;$j++){
+							if(count($data['ckts'][$ckt][$j])>0){
+								$dc=array(
+									'feed'=>$feed, 
+									'ver'=>$ver,
+									'ckt'=>$ckt,
+									"day"=>$j,
+									"setpt"=>$data['ckts'][$ckt][$j]['setpt'],
+									"clock"=>$data['ckts'][$ckt][$j]['time']
+								);
+								$whereArr=array(
+									'feed'=>$feed, 
+									'ver'=>$ver,
+									'ckt'=>$ckt,
+									"day"=>$j
+								);	
+								//function replEntries4dc($db, $dc)
+								$progs->setWhereStr($whereArr);
+								$progs->deleteWhere();
+								$progs->setInsArr($dc);	
+								$progs->pdo_insert();	
+							}
+						}					
+					} else {//PUT request to /prog/80302/ver/4/5, day 5 for ckt 4
+						echo"PUT request to /prog/80302/ver/4/5, day 5 for ckt 4\n";
+						print_r(count($data['ckts'][11][5])); 
+						$ckt=4;
+						$day=5;
+						if(count($data['ckts'][$ckt][$day])>0){
+							$dc=array(
+								'feed'=>$feed, 
+								'ver'=>$ver,
+								'ckt'=>$ckt,
+								"day"=>$day,
+								"setpt"=>$data['ckts'][$ckt][$day]['setpt'],
+								"clock"=>$data['ckts'][$ckt][$day]['time']
+							);
+							$whereArr=array(
+								'feed'=>$feed, 
+								'ver'=>$ver,
+								'ckt'=>$ckt,
+								"day"=>$day
+							);	
+							//function replEntries4dc($db, $dc)
+							$progs->setWhereStr($whereArr);
+							$progs->deleteWhere();
+							$progs->setInsArr($dc);	
+							$progs->pdo_insert();	
+						}					
+					}
+				}
+			}
+			break;				
 		}
-		echo("a put request has been put\n\n"); 
+		echo("\na put request has been put\n\n"); 
 		break;	
 	case 'delete':
 	/*			
@@ -328,7 +441,10 @@ function delProg($db,$path){
 	}	
 }	
 function newProg($db, $path, $data){
-	
+
+}
+function replEntries4dc($db, $data){
+    
 }
 
 function getTodayLTEnow($db, $path, $data){
@@ -400,6 +516,7 @@ function delHold($db, $feed, $ckt){
 		echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
 	}	
 }
+
 	/*
 	$data = $req->getData();  jsonArray
 json{"data": {"temp": [844, 622], "relay": [0, 1 ], "setpt": [302, 283]}}
