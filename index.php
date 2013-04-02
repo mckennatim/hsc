@@ -1,17 +1,18 @@
 <?php
 include 'rest.php';
 include  '/usr/local/lib/tm/db.php';
+//include('/usr/local/lib/tm/ChromePhp.php');
 echo header("Content-type: text/plain");
 //$qs=$_SERVER['QUERY_STRING'];
 //echo("duck\n\n ".$qs);
 //echo("\n\n".$_GET['room']."\n\n");
-
+ChromePhp::log("in index.php");
 
 $req = RestUtils::processRequest();
 $path =$req->getPathArr();
 $now = $req->getTimeStamp();
-$type  = $path[1];//feed or prog or boho
-$feed=$path[2];	//the feed number
+$type = $path[1];//feed or prog or boho
+$feed = $path[2];	//the feed number
 $data=$req->getData();
 $db = new db($path[0]);
 $params = array();
@@ -37,41 +38,97 @@ switch($req->getMethod())
 	{
 	case 'get':
 	/*
-		GET request to /prog/80302/loc – get progs for all locations
-		GET request to /prog/80302/loc/peri_study – get progs for location
-		GET request to /prog/80302– get all progs for feed
-		GET request to /prog/80302/sensor – get prog for feed's sensor
+		GET request to /prog/80302/ – get progs for all locations
+		GET request to /prog/80302/5 – get progs for location
+		GET request to /boho/80302/ – get all holds for feed
+		GET request to /prog/80302/3 – get prog for feed's sensor
+		GET request to /state/80302/3 – get state of feed's sensor
+		GET request to /state/80302/ – get state for all
+		GET request to /zone/80302/ – get all zone info
+		GET request to /zone/80302/3 – get info for zone 3
 		GET request to /feed/– get list of all feeds
 		GET reqiuest to /feed/80302 - get list of sensors/states names for feed
 		GET request to /feed/80302/sensor/where – get feed for sensor/state of feed
 		*/	
-		//echo("a get request with this data \n\n");
-		//print_r($data);
-		//print_r($path);
-		$room = $data['room'];
-		if (strlen($room) == 0){
-			//echo("list rooms");
-			$roomlist = getRoomList($db, $feed);
-			$roomListJSON= '{"items":'. json_encode($roomlist) .'}';
-			echo($roomListJSON);
-		}else if ($room=='all'){
-			//echo("list all room data");
-			$allroomdata = getAllRoomData($db, $feed);
-			$allRoomJSON= '{"items":'. json_encode($allroomdata) .'}';
-			echo($allRoomJSON);
-			//print_r($allroomdata);
-		}else{
-			print_r($req->getHttpHeaders());
-			$roomdata = getRoomData($room, $db, $feed);
-			$roomJSON= '{"items":'. json_encode($roomdata) .'}';
-			echo($roomJSON);			
-			print_r($roomdata);
-			$ftemp= $roomdata['temp']/16*9/5+32;
-			$stemp =$roomdata['setpt']/8*9/5+32;
-				if($roomdata['relay']==0){$zoneis = 'off';}else{$zoneis='on';}
-			$outstr = "The ". $roomdata['room']." temperature was ". $ftemp. " at ". date('l jS \of F Y h:i:s A', $req->getTimeStamp()). ". The thermostat is set to ".$stemp.  " and this zone is ".$zoneis;
-			echo($outstr);	
+		switch($type){
+			case 'feed':
+				break;
+			case 'prog':
+				$progdat=array();
+				$ver=$path[3];
+				$progTbl = new tbl("progs", $db);
+				$ckts= array();
+				for ($i=0;$i<$params['MAXCKTS'];$i++){
+					$days=array();
+					for ($j=0;$j<7;$j++){
+						$whereArr=array(
+							'feed'=>$feed, 
+							'ver'=>$ver,
+							'ckt'=>$i,
+							"day"=>$j
+						);
+						$progTbl->fieldStr='`clock`, `setpt`';
+						$progTbl->setWhereStr($whereArr);
+						$days[$j]=$progTbl->selectWhere();
+					}
+					$ckts[$i]=$days;
+				}
+				$progdata[$feed][$ver]=$ckts;
+				$progJSON= '{"items":'. json_encode($progdata) .'}';
+				//print_r($progdata);
+				echo($progJSON);
+				break;
+			case 'boho':
+				break;
+			case 'zone':
+				$zonelist = getZoneList($db, $feed);
+				$zoneListJSON= '{"items":'. json_encode($zonelist) .'}';
+				echo($zoneListJSON);
+				break;
+			case 'state':
+				$allroomdata = getAllRoomData($db, $feed);
+				$allRoomJSON= '{"items":'. json_encode($allroomdata) .'}';
+				echo($allRoomJSON);
+				break;									
 		}
+
+		/*
+		foreach($data as $key=>$val){}
+		switch($key){
+			case 'room':
+				$room = $data['room'];
+				if (strlen($room) == 0){
+					//echo("list rooms");
+					$roomlist = getRoomList($db, $feed);
+					$roomListJSON= '{"items":'. json_encode($roomlist) .'}';
+					echo($roomListJSON);
+				}else if ($room=='all'){
+					//echo("list all room data");
+					$allroomdata = getAllRoomData($db, $feed);
+					$allRoomJSON= '{"items":'. json_encode($allroomdata) .'}';
+					echo($allRoomJSON);
+					//print_r($allroomdata);
+				}else{
+					print_r($req->getHttpHeaders());
+					$roomdata = getRoomData($room, $db, $feed);
+					$roomJSON= '{"items":'. json_encode($roomdata) .'}';
+					echo($roomJSON);			
+					print_r($roomdata);
+					$ftemp= $roomdata['temp']/16*9/5+32;
+					$stemp =$roomdata['setpt']/8*9/5+32;
+						if($roomdata['relay']==0){$zoneis = 'off';}else{$zoneis='on';}
+					$outstr = "The ". $roomdata['room']." temperature was ". $ftemp. " at ". date('l jS \of F Y h:i:s A', $req->getTimeStamp()). ". The thermostat is set to ".$stemp.  " and this zone is ".$zoneis;
+					echo($outstr);	
+				}
+				break;
+			case 'prog':
+				if (!strcmp($val,'all')){
+					$progdata = getProgs($db, $feed);
+					$progJSON= '{"items":'. json_encode($progdata) .'}';
+					echo($progJSON);
+				}
+				break; 	
+		}*/
 		break;
 	case 'post':
 		/* a get like list query string feef=80302&type=prog
@@ -84,7 +141,11 @@ switch($req->getMethod())
 			case 'prog':
 				break;
 			case 'boho':
-				break;								
+				break;
+			case 'zone':
+				break;
+			case 'state':
+				break;									
 		}		
 		print_r($data);
 		echo("a post request"); 
@@ -159,30 +220,38 @@ switch($req->getMethod())
 			$feed=$path[2];	
 			if (strlen($path[4]==0))	{//PUT request to /prog/80302/ver/ all ckts and all days for those ckts
 				echo "PUT request to /prog/80302/ver/ all ckts and all days for those ckts deleteWhere() then pdo_insert()\n";
-				print_r(count($data['ckts'][11][5])); 
+				print_r(($data[$ver]['ckts'][1][5])); 
+				$data=$data[$ver];
 				for ($i=0;$i<$params['MAXCKTS'];$i++){
 					for ($j=0;$j<7;$j++){
-						if(count($data['ckts'][$i][$j])>0){
-							$dc=array(
-								'feed'=>$feed, 
-								'ver'=>$ver,
-								'ckt'=>$i,
-								"day"=>$j,
-								"setpt"=>$data['ckts'][$i][$j]['setpt'],
-								"clock"=>$data['ckts'][$i][$j]['time']
-							);
-							$whereArr=array(
-								'feed'=>$feed, 
-								'ver'=>$ver,
-								'ckt'=>$i,
-								"day"=>$j
-							);	
-							//function replEntries4dc($db, $dc)
-							$progs->setWhereStr($whereArr);
-							$progs->deleteWhere();
-							$progs->setInsArr($dc);	
-							$progs->pdo_insert();	
+						$whereArr=array(
+							'feed'=>$feed, 
+							'ver'=>$ver,
+							'ckt'=>$i,
+							"day"=>$j
+						);	
+						print_r($whereArr);
+						//function replEntries4dc($db, $dc)
+						$progs->setWhereStr($whereArr);
+						$progs->deleteWhere();						
+						$titeArr=$data['ckts'][$i][$j];
+
+						if (!is_null($titeArr)){
+							foreach ($titeArr as $tite) {
+								$dc=array(
+									'feed'=>$feed, 
+									'ver'=>$ver,
+									'ckt'=>$i,
+									"day"=>$j,
+									"setpt"=>$tite['setpt'],
+									"clock"=>$tite['clock']
+								);
+								print_r($dc);
+								$progs->setInsArr($dc);	
+								$progs->pdo_insert();
+							}							
 						}
+
 					}
 				}
 			}else{
@@ -296,8 +365,23 @@ switch($req->getMethod())
 				break;									
 		}
 }
-
-function getRoomList($db, $feed){
+/*
+function getProgs($db, $feed){
+	try {
+		$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
+		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$sql  = 'SELECT * FROM progs WHERE feed="'.$feed.'" ORDER BY ver, ckt, day, clock';
+		$stmt = $dbh->prepare($sql);
+		$stmt->execute();
+		$result = $stmt->fetchAll(PDO::FETCH_OBJ);
+		//print_r($result);
+		return $result;
+	} catch(PDOException $e) {
+	echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
+	}	
+}
+*/
+function getZoneList($db, $feed){
 	try {
 		$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
 		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

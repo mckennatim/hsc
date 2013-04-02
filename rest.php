@@ -1,4 +1,6 @@
 <?php
+include('/usr/local/lib/tm/ChromePhp.php');
+ChromePhp::log("in rest.php");
 class RestUtils
 {
 	public static function processRequest()
