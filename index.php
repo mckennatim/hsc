@@ -220,8 +220,7 @@ switch($req->getMethod())
 			$feed=$path[2];	
 			if (strlen($path[4]==0))	{//PUT request to /prog/80302/ver/ all ckts and all days for those ckts
 				echo "PUT request to /prog/80302/ver/ all ckts and all days for those ckts deleteWhere() then pdo_insert()\n";
-				print_r(($data[$ver]['ckts'][1][5])); 
-				$data=$data[$ver];
+				print_r(($data[1][5])); 
 				for ($i=0;$i<$params['MAXCKTS'];$i++){
 					for ($j=0;$j<7;$j++){
 						$whereArr=array(
@@ -230,11 +229,11 @@ switch($req->getMethod())
 							'ckt'=>$i,
 							"day"=>$j
 						);	
-						print_r($whereArr);
+						//print_r($whereArr);
 						//function replEntries4dc($db, $dc)
 						$progs->setWhereStr($whereArr);
 						$progs->deleteWhere();						
-						$titeArr=$data['ckts'][$i][$j];
+						$titeArr=$data[$i][$j];
 
 						if (!is_null($titeArr)){
 							foreach ($titeArr as $tite) {
