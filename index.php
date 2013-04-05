@@ -19,7 +19,7 @@ $params = array();
 $params['MAXCKTS']=12;
 //$db->setDb($path[0]);
 //$retSetptStr="\n\n<[1180,3182,4173,5174,6176]>\n";
-$retSetptStr="<[130,130,130,0 ,0,130,0,0,160,169, 170,190]>\n";
+//$retSetptStr="<[130,130,130,0 ,0,130,0,0,160,169, 170,190]>\n";
 //echo($req->getMethod());
 /*
 198.23.156.78/hsc/feed/80302?room=all
@@ -79,6 +79,9 @@ switch($req->getMethod())
 				echo($progJSON);
 				break;
 			case 'boho':
+				$boholist = getBohoList($db, $path);
+				$bohoListJSON= '{"items":'. json_encode($boholist) .'}';
+				echo($bohoListJSON);			
 				break;
 			case 'zone':
 				$zonelist = getZoneList($db, $feed);
@@ -158,11 +161,11 @@ switch($req->getMethod())
 		/*PUT request to /feed/80308 – Update feed with additional data */		
 		switch($type){
 		case 'feed':
-			echo("\nin case:put, case:feed of index.php, sending this back to microcontroller\n");
-			/*
-			getTodayLTEnow();
-			*/
-			ckHolds($db, $req);
+			//echo("\nin case:put, case:feed of index.php, sending this back to microcontroller\n");
+			getTodayLTEnow($db, $path);
+			$se = getSetptArr($db, $path);
+			//echo($se);
+			ckHolds($db, $path);
 			$se = getSetptArr($db, $path);
 			echo $se;
 			zeroSetptArr($db, $path);					
@@ -530,17 +533,41 @@ function replEntries4dc($db, $data){
     
 }
 
-function getTodayLTEnow($db, $path, $data){
-	updateSetptArr($db, $feed, $ckt,$setpt);
-}
-function ckHolds($db, $req){
-	echo("in ckHolds ");
+function getTodayLTEnow($db, $path){
+	//echo("get Today LTE now ");
 	$status=array();
-	$path =$req->getPathArr();
-	$now = $req->getTimeStamp();
+	$now = time();
+	$dow = date( "w", $now);
+	$ti = date("H:i:s", $now);
 	$type  = $path[1];//feed or prog or
-	$feed=$path[2];	//the feed number
-	echo ($now);
+	$feed = $path[2];	//the feed number
+	//echo ($now);
+	//$data=$req->getData();	
+	try {
+		$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
+		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$sql  = 'SELECT ckt, setpt , MAX( clock ) FROM progs WHERE ver="current" AND feed ="'.$feed.'" AND day="'.$dow.'" AND clock<"'.$ti.'" GROUP BY ckt ORDER BY ckt, clock DESC';
+		$stmt = $dbh->prepare($sql);
+		$stmt->execute();
+		while($result = $stmt->fetch()){
+			$ckt=$result['ckt'];
+			$setpt =f2setpt($result['setpt']);
+			//echo("\n".$ckt."  ".$setpt."");
+			updateSetptArr($db, $feed, $ckt, $setpt);
+		}
+		//echo("\n\n".$sql."\n\n");
+	} catch(PDOException $e) {
+		echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
+	}	
+}
+
+function ckHolds($db, $path){
+	//echo("in ckHolds ");
+	$status=array();
+	$now = time();
+	$type  = $path[1];//feed or prog or
+	$feed = $path[2];	//the feed number
+	//echo ($now);
 	//$data=$req->getData();	
 	try {
 		$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
@@ -550,16 +577,46 @@ function ckHolds($db, $req){
 		$stmt->execute();
 		while($result = $stmt->fetch()){
 			$ckt=$result['ckt'];
-			$setpt =$result['setpt'];
+			$setpt =f2setpt($result['setpt']);
 			$finish = $result['finish'];
 			$status[$ckt]['setpt']=$setpt;
 			$status[$ckt]['finish']=$finish;
 			updateSetptArr($db, $feed, $ckt,$setpt);
 		}
-		print_r($status);
+		//print_r($status);
 	} catch(PDOException $e) {
 		echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
 	}	
+}
+
+function getBohoList($db, $path){
+	$bohoA=array();
+	$bohoA[11]=null;
+	$now = time();
+	$type  = $path[1];//feed or prog or
+	$feed = $path[2];	//the feed number
+	//echo ($now);
+	//$data=$req->getData();	
+	try {
+		$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
+		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$sql  = 'SELECT DISTINCT `ckt`, `setpt`, `start`, `finish` FROM `holds`  WHERE feed="'.$feed.'" AND `start`<='.$now. ' AND `finish`>'.$now.' ORDER BY ckt'; ;
+		$stmt = $dbh->prepare($sql);
+		$stmt->execute();	
+		while($result = $stmt->fetch()){
+			$ckt=$result['ckt'];
+			$setpt =$result['setpt'];
+			$start = $result['start'];
+			$finish = $result['finish'];
+			$bohoA[$ckt]['setpt']=$setpt;
+			$bohoA[$ckt]['start']=$start;
+			$bohoA[$ckt]['finish']=$finish;
+		}
+		//echo($sql);
+		return $bohoA;
+	} catch(PDOException $e) {
+		echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
+	}		
 }
 
 function insertHold($db, $path, $data){
@@ -598,6 +655,11 @@ function delHold($db, $feed, $ckt){
 	} catch(PDOException $e) {
 		echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
 	}	
+}
+
+function f2setpt($ftemp){
+	 $atemp= round(($ftemp-32)*8*5/9);    
+    return $atemp;
 }
 
 	/*

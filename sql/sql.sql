@@ -187,3 +187,81 @@ CREATE TABLE IF NOT EXISTS `progs` (
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=500 ;
 
 DELETE FROM `progs` WHERE `feed`="80302" AND `ver` = "current" 
+
+SELECT ckt, setpt, clock FROM progs WHERE feed = "80302" AND day=4 AND clock<"12:15:00" ORDER BY ckt, clock DESC
+
+
+SELECT ckt, setpt, clock FROM progs t1
+INNER JOIN
+  SELECT ckt, setpt, clock FROM progs 
+  WHERE feed = "80302" AND day=4 AND clock<"12:15:00" 
+  ORDER BY ckt, clock DESC as t2
+ON t1.ckt=t2.ckt AND t1.setpt=t2.setpt AND t1.clock=t2.clock
+
+--select max that meets condition for each group
+
+
+
+--
+
+SELECT ckt, setpt, clock FROM progs t1
+INNER JOIN
+  SELECT ckt, setpt, clock FROM progs 
+  WHERE feed = "80302" AND day=4 AND clock<"12:15:00" t2
+ON t1.ckt=t2.ckt AND t1.setpt=t2.setpt 
+GROUP BY t2.ckt
+WHERE t1.clock=MAX(t2.clock)
+
+
+    ckt setpt clock
+    0 69  06:06:00
+    1 67  10:30:00
+    1 57  01:30:00
+    2 69  06:06:00
+    3 69  06:06:00
+    4 69  06:06:00
+    4 62  00:30:00
+    5 57  10:30:00
+    5 67  10:30:00
+    5 57  01:30:00
+    6 57  10:30:00
+    6 67  10:30:00
+    6 57  01:30:00
+
+SELECT p.ckt, p.setpt, p.clock, p.feed
+FROM progs p
+JOIN (
+  SELECT MAX( clock ) maxClock, ckt
+  FROM progs
+  WHERE feed =  "80302"
+  AND DAY =4
+  AND clock <  "12:15:00"
+  GROUP BY ckt
+)p2 ON p.ckt = p2.ckt
+AND p.clock = p2.maxclock
+GROUP BY p.ckt
+LIMIT 0 , 30
+
+SELECT p.ckt, p.setpt, p.clock 
+FROM progs p
+    JOIN (
+        SELECT MAX(clock) maxClock, ckt
+        FROM progs 
+        WHERE feed = "80302" 
+            AND day=4 
+            AND clock<"12:15:00" 
+        GROUP BY ckt
+    ) p2 on p.ckt = p2.ckt AND p.clock = p2.maxclock
+ORDER BY p.ckt, p.clock DESC
+
+I wish I knew how to take a problem and construct joins to answer it. From your sql I can deconstruct that here the idea is to just find the max time < 12:30 and then add in the setpt by joining it to the results of the inner query. Thanks
+
+
+SELECT ckt, setpt , MAX( clock ) 
+FROM progs
+WHERE feed =  "80302"
+AND DAY =4
+AND clock <  "12:15:00"
+GROUP BY ckt
+ORDER BY ckt, clock DESC 
+
