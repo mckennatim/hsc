@@ -35,10 +35,11 @@ function f2esetpt($ftemp){
 echo("\n\n".f2setpt($ftemp));
 getTodayLTEnow($db, $path);
 $se = getSetptArr($db, $path);
-echo $se;
+$se=addDefIfprog0($se);
+echo setptA2J($se);
 ckHolds($db, $path);
 $se = getSetptArr($db, $path);
-echo $se;
+echo setptA2J($se);
 //print_r(getBohoList($db, $path));
 $bohoList = getBohoList($db, $path);
 $bohoListJSON= '{"items":'. json_encode($bohoList) .'}';

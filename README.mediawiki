@@ -1,5 +1,71 @@
+back to [[electronics]]
 ===[[online heating system control project]]===
 http://[[homecontrol]].sitebuilt.net jquery-mobile app
+====beta 0.1 - cleaned up colors, some testing on multiple devices====
+TODO: back to electronics. Build working relays.
+
+====version I: ====
+on callback functions from things like $.get(... this.something doesn't refer back to the object method but must be explicitly referred to by like sys.somethhing
+
+====version H: titeObj -time temp array: display, sort, clear, edit  ====
+TODO:create a datObj. Arrays/objects push/slice/delete
+
+All the functions and data are encapsulated. A coulple of 'this' problems were solved by replacing this. with titeObj.
+
+My kind of oops: http://www.javascriptkit.com/javatutors/oopjs.shtml
+
+====version G: tempA -time temp array: display, sort, clear, edit  ====
+(TODO: flesh out the program data structure) OK now I know at least about the tempA array
+    0: Object
+    temp: "69"
+    time: "00:45"
+    __proto__: Object
+    1: Object
+    temp: "69"
+    time: "09:45"
+    __proto__: Object
+    2: Object
+    temp: "69"
+    time: "12:45"
+    __proto__: Object
+andthere a boatload of functions to manipulate it and its display. Strong candidate for an Object with member functions.    
+    
+Moved away from using JQuery and delved further into CSS3 for creating buttons and widgets. Everything works better. 
+=====Javascript=====
+=====nth children=====
+<syntaxhighlight>
+    $(".prog-tes li").click(function() {
+        time=$(':nth-child(2)', $(this)).html();
+        temp=($(':nth-child(3)', $(this)).html()).substring(0,2);
+        alert(temp+"clicked it "+time);
+    }); 
+</syntaxhighlight>
+=====javascript array.push(newval);=====
+
+=====$(this)[0];//same as getElementById=====
+=====dataset data-mydata=====
+  ddd=$(this)[0];//same as getElementById
+  dow = ddd.dataset.dow;
+
+=====$(document).on('pageshow', '#aroom', function (e) {=====
+Use when you have programmatically changed page and now need to do somethin on that page
+
+=====scroll to anchor=====
+<syntaxhighlight>
+    if(anc.length>0){
+        $('html, body').animate({
+            scrollTop: $(anc).offset().top-95
+        }, 1000);  
+        anc="";     
+    }
+</syntaxhighlight>
+=====CSS=====
+If styling isn't getting picked up specify the hell out of the selector. - .prog-day div.day2 li, .prog-time div.prog-time-box li{
+
+====version F: CSS3 and media queries====
+:col1, col2, col3 do wahht they should
+:just cloumn 1a is working in terms of element layout
+
 ====version E: write schedule progs to database====
 :PUT request to /prog/80302/ver/      multiple ckts and multiple days for those ckts
 :PUT request to /prog/80302/ver/99/5, multiple ckts for day 5
@@ -11,7 +77,7 @@ remembering the flow from the case:put case:feed arduino loop is
 * ckHolds($db, $req); //(calls updateSetptArr())
 * $se = getSetptArr($db, $path);
 * echo $se; //sends it to arduino
-* zeroSetptArr($db, $path);	
+* zeroSetptArr($db, $path); 
 Work on, from app end, routines and interface for writing programs
 
 The structure of prog data is {"feed":"80302","ckts":[[{"time":"9:30","setpt":"147"},null,null,null,null,null,{"time":"9:30","setpt":"147"}],null,null,null,null,null,null,null,null,null,null,[{"time":"9:30","setpt":"147"},null,null,null,null,null,{"time":"9:30","setpt":"147"}]]} and it is roughed out in comments at bottom of ha.js
@@ -19,7 +85,7 @@ The structure of prog data is {"feed":"80302","ckts":[[{"time":"9:30","setpt":"1
 
 ====version-D prog data and hold data ====
 ACTUALLY: didn't touch getTodayLTEnow()
-*added a RewriteRule boho /var/www/hsc/index.php?id=$1	in defauls sites
+*added a RewriteRule boho /var/www/hsc/index.php?id=$1  in defauls sites
 *worked on hold.php driven from .button-boost and .button.setpt (data structures are the same {"feed":"80302","ckt":4,"start":1363707975,"finish":1363688100,"setpt":167})
 *worked on release as DELETErequest inhad  deleteHold.php wcase:delete:case:boho callinging existing method in index.php called delHold()
 
@@ -28,7 +94,7 @@ PLANNED: Will be combining dialog for boost and hold. Working to have /feed do t
     ckHolds($db, $req); //(calls updateSetptArr())
     $se = getSetptArr($db, $path);
     echo $se; //sends it to arduino
-    zeroSetptArr($db, $path);	
+    zeroSetptArr($db, $path);   
 
 Have been using the dialog pages as test pages for moving prog data and hold data through system.
 :post of new program data (was getting tested boost-yes button )
@@ -45,8 +111,8 @@ Have been using the dialog pages as test pages for moving prog data and hold dat
 ::this data tracks through newProg.php and then to http://198.23.156.78/hsc/prog/80302 as a a JSON post string
 :post of new hold/boost entry (was getting tested in hold-yes button)
 <syntaxhighlight>
-    $(".hold-yes").click(function() {	
-        console.log("clicked hold-yes");		
+    $(".hold-yes").click(function() {   
+        console.log("clicked hold-yes");        
         holdS='{"feed":"80302","ckt":99,"start":1363707975,"finish":1364000000,"setpt":140}';
         holdArr = JSON.parse(holdS);
         holdStr =JSON.stringify(holdArr);
@@ -55,8 +121,11 @@ Have been using the dialog pages as test pages for moving prog data and hold dat
             alert("Data Loaded: " + data);
         });
         return false;
-    });		
+    });     
 </syntaxhighlight>
+
+{{:header-menu}}
+
 ====system versions -arduino+server code====
 =====version C - /hsc/index.php /services/putSetptArr.php =====
 Cron calls have to build the data into the URL so they will look like:
@@ -70,8 +139,8 @@ Not a PUT but in Curl it gets converted for the rest api as a PUT with data enco
 ::$data=$req->getData() - rest.api finds the data depending on PUT GET POST etc setpt=167
 Index.php looks at PUT||GET||POST, feed||prog, and sensor||noSensor to determine what to do.
 
-:updateSetptArr($db, $path, $data); - appends to setPtArr one value	
-when PUT/feed/ fires it first grabs any new setpts from the db, then echo's it back to the Arduino and then zero's it out. 				
+:updateSetptArr($db, $path, $data); - appends to setPtArr one value 
+when PUT/feed/ fires it first grabs any new setpts from the db, then echo's it back to the Arduino and then zero's it out.              
  $se = getSetptArr($db, $path);
  echo $se;
  zeroSetptArr($db, $path);
@@ -83,7 +152,7 @@ getHttpHeaders() holds hidden stuff like apikey and that stuff gets set here:
    "HTTP/1.1 Host: api.cosm.com",
    "X-ApiKey:  xxxxxxjxjndjjxn",
    "User-Agent: sitebuilt Arduino Example (83080)" ));  
-	 	
+        
 =====version C - hsc-run: C code - no more String class, everything indexed on MAXCKTS, new setpts in (simple)<JSONarray> =====
 :setup() starts the serial monitor and ethernet then reads from memory an array of sensor id's (char lu[MAXCKTS][9]), the numckts and an array of setpts[MAXCKTS] where 12 is MAXCKTS. It then assigns an array of pins as outputs (to relays not yet arrived from China)  
 
@@ -116,12 +185,12 @@ Moving things to 10.0.1.101 but first set up api framework there<br/>
 Added rewrite rules in /etc/apache2/sites-available/default by following beginner [http://www.sitepoint.com/apache-mod_rewrite-examples/ link]
 <syntaxhighlight>
 <Directory /var/www/hsc>
-	RewriteEngine On
-	RewriteRule feed/([0-9]+) /var/www/hsc/index.php?id=$1
-	RewriteRule feeds /var/www/hsc/index.php
-	RewriteRule datastreams /var/www/hsc/index.php?id=$1	
-	RewriteRule prog /var/www/hsc/index.php?id=$1		
-	RewriteRule progs /var/www/hsc/index.php?id=$1		
+    RewriteEngine On
+    RewriteRule feed/([0-9]+) /var/www/hsc/index.php?id=$1
+    RewriteRule feeds /var/www/hsc/index.php
+    RewriteRule datastreams /var/www/hsc/index.php?id=$1    
+    RewriteRule prog /var/www/hsc/index.php?id=$1       
+    RewriteRule progs /var/www/hsc/index.php?id=$1      
 </Directory>
 </syntaxhighlight>
 Test code to parse url

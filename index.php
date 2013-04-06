@@ -17,6 +17,9 @@ $data=$req->getData();
 $db = new db($path[0]);
 $params = array();
 $params['MAXCKTS']=12;
+$progArr= array(1,1,1,1,1,1,1,0,0,0,0,0);
+$params['programmable']=$progArr;
+$params['defaultLo']=57;
 //$db->setDb($path[0]);
 //$retSetptStr="\n\n<[1180,3182,4173,5174,6176]>\n";
 //$retSetptStr="<[130,130,130,0 ,0,130,0,0,160,169, 170,190]>\n";
@@ -131,7 +134,7 @@ switch($req->getMethod())
 					echo($progJSON);
 				}
 				break; 	
-		}*/
+		} */
 		break;
 	case 'post':
 		/* a get like list query string feef=80302&type=prog
@@ -167,7 +170,8 @@ switch($req->getMethod())
 			//echo($se);
 			ckHolds($db, $path);
 			$se = getSetptArr($db, $path);
-			echo $se;
+			$se=addDefIfprog0($se);
+			echo setptA2J($se);
 			zeroSetptArr($db, $path);					
 			//echo($retSetptStr);//"\n<0151,1152,2153>\n"
 			/*PUT request to /feed/80308 – Update feed with additional data */	
@@ -480,6 +484,26 @@ function updateSetptArr($db, $feed, $sensor,$setpt){
 	}	
 }	
 
+function addDefIfprog0($se){
+	global $params;
+	$ar = $params['programmable'];
+	$lo = $params['defaultLo'];
+	for ($i=0;$i<$params['MAXCKTS'];$i++){
+		//echo ($ar[$i].' '.$se[$i]."\n");
+		if($ar[$i]==1 && $se[$i]==0){
+			$se[$i]=f2setpt($lo);
+		}
+	}
+	return $se;
+}
+
+function setptA2J($se){
+		$sse = json_encode($se);
+		$sse = preg_replace( "/\"(\d+)\"/", '$1', $sse );//remove quotes from numbers
+		$sse = "\n<".$sse.">\n";
+		return $sse;
+}
+
 function getSetptArr($db, $path){
 	$feed =$path[2];
 	try {
@@ -489,12 +513,7 @@ function getSetptArr($db, $path){
 		$stmt = $dbh->prepare($sql);
 		$stmt->execute();
 		$se = $stmt->fetchAll(PDO::FETCH_COLUMN);
-		//echo $sql;
-		//print_r($se);
-		$sse = json_encode($se);
-		$sse = preg_replace( "/\"(\d+)\"/", '$1', $sse );//remove quotes from numbers
-		$sse = "\n<".$sse.">\n";
-		return $sse;
+		return $se;
 	} catch(PDOException $e) {
 	echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
 	}	
