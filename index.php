@@ -189,11 +189,11 @@ switch($req->getMethod())
 				$relay = $data['data']['relay'][$i];
 				$setpt = $data['data']['setpt'][$i];
 				$circuit = "ckt".$i;
-				echo $i. " temp=".$temp." dtemp=".$ibr[$i]['temp'].", relay=".$relay." drelay=".$ibr[$i]['relay'].", setpt=".$setpt." dsetpt=".$ibr[$i]['setpt']."\n";			
+				//echo $i. " temp=".$temp." dtemp=".$ibr[$i]['temp'].", relay=".$relay." drelay=".$ibr[$i]['relay'].", setpt=".$setpt." dsetpt=".$ibr[$i]['setpt']."\n";			
 				//if($temp - $ibr[$i]['temp']!=0 || $relay - $ibr[$i]['relay'] !=0|| $setpt - $ibr[$i]['setpt']!=0)	
 				if($temp != $ibr[$i]['temp'] || $relay != $ibr[$i]['relay'] || $setpt != $ibr[$i]['setpt']){
 					//update database only if temp, relay or setpt have changed;
-					echo $i. " has changed and will be updated to \n";
+					//echo $i. " has changed and will be updated to \n";
 					$insarr=array(
 						'afeed'=>$feed, 
 						'circuit'=>$circuit,
@@ -204,7 +204,7 @@ switch($req->getMethod())
 					);
 					// get prior data to see if it has changed		
 					$tbo->setInsArr($insarr);	
-					print_r($insarr);
+					//print_r($insarr);
 					//echo "before pdo_insert\n";
 					$tbo->pdo_insert();				
 				}
