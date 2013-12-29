@@ -1,6 +1,7 @@
 <?php
 include 'rest.php';
 include  '/usr/local/lib/tm/db.php';
+include 'Tbl.php';
 //include('/usr/local/lib/tm/ChromePhp.php');
 echo header("Content-type: text/plain");
 //$qs=$_SERVER['QUERY_STRING'];
@@ -19,7 +20,7 @@ $params = array();
 $params['MAXCKTS']=12;
 $progArr= array(1,1,1,1,1,1,1,0,0,0,0,0);
 $params['programmable']=$progArr;
-$params['defaultLo']=57;
+$params['defaultLo']=65;
 //$db->setDb($path[0]);
 //$retSetptStr="\n\n<[1180,3182,4173,5174,6176]>\n";
 //$retSetptStr="<[130,130,130,0 ,0,130,0,0,160,169, 170,190]>\n";
@@ -59,7 +60,7 @@ switch($req->getMethod())
 			case 'prog':
 				$progdat=array();
 				$ver=$path[3];
-				$progTbl = new tbl("progs", $db);
+				$progTbl = new Tbl("progs", $db);
 				$ckts= array();
 				for ($i=0;$i<$params['MAXCKTS'];$i++){
 					$days=array();
@@ -165,22 +166,21 @@ switch($req->getMethod())
 		switch($type){
 		case 'feed':
 			//echo("\nin case:put, case:feed of index.php, sending this back to microcontroller\n");
-			getTodayLTEnow($db, $path);
-			$se = getSetptArr($db, $path);
-			//echo($se);
-			ckHolds($db, $path);
-			$se = getSetptArr($db, $path);
-			$se=addDefIfprog0($se);
+			//getTodayLTEnow($db, $path);
+			//$se = getSetptArr($db, $path);
+			//ckHolds($db, $path);
+			//$se = getSetptArr($db, $path);
+			//$se=addDefIfprog0($se);
 			echo setptA2J($se);
 			zeroSetptArr($db, $path);					
 			//echo($retSetptStr);//"\n<0151,1152,2153>\n"
 			/*PUT request to /feed/80308 – Update feed with additional data */	
 			$timestamp = $req->getTimeStamp();				
-			$tbo = new tbl("feed", $db);
+			$tbo = new Tbl("feed", $db);
 			$data=$req->getData();
 			//echo "soulld be about to print data";	
 			//print_r($data);	
-			$ibr =getLastCktEntries($db,$feed);	//object of last entries
+			//$ibr =getLastCktEntries($db,$feed);	//object of last entries
 			$jibr=json_encode($ibr[0]);
 			//echo($jibr);	
 			$i=0;	
@@ -222,7 +222,7 @@ switch($req->getMethod())
 			break;	
 		case 'prog':
 			/*	PUT request to /prog/80302/ver/ckt/day*/	
-			$progs = new tbl("progs", $db);
+			$progs = new Tbl("progs", $db);
 			$ver=$path[3];
 			$feed=$path[2];	
 			if (strlen($path[4]==0))	{//PUT request to /prog/80302/ver/ all ckts and all days for those ckts
@@ -501,7 +501,9 @@ function setptA2J($se){
 		$sse = json_encode($se);
 		$sse = preg_replace( "/\"(\d+)\"/", '$1', $sse );//remove quotes from numbers
 		$sse = "\n<".$sse.">\n";
-		return $sse;
+		$ss = "\n<[155,115,151,138,115,115,115,0,0,0,0,0]>\n";
+		//-----------LR  Mu  2   3   P  Ma  TV---hard code setpts
+		return $ss;
 }
 
 function getSetptArr($db, $path){
@@ -640,7 +642,7 @@ function getBohoList($db, $path){
 
 function insertHold($db, $path, $data){
 	global $params;
-	$tbo = new tbl("holds", $db);
+	$tbo = new Tbl("holds", $db);
 	$data['feed']= $path[2];
 	//echo("\n in insert0Hold path[3]=".$path[3]."\n");
 	if (!strcmp(trim($path[3]),'99')){
