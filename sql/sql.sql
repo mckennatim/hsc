@@ -21,7 +21,7 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
 CREATE TABLE IF NOT EXISTS `feed` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
-  `feed` varchar(7) NOT NULL,
+  `afeed` varchar(7) NOT NULL,
   `circuit` varchar(5) NOT NULL,
   `temp` int(5) NOT NULL,
   `relay` int(1) NOT NULL,
