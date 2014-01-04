@@ -3,7 +3,7 @@ include 'rest.php';
 include  '/usr/local/lib/tm/db.php';
 include 'Tbl.php';
 //include('/usr/local/lib/tm/ChromePhp.php');
-echo header("Content-type: text/plain");
+//echo header("Content-type: text/plain");
 //$qs=$_SERVER['QUERY_STRING'];
 //echo("duck\n\n ".$qs);
 //echo("\n\n".$_GET['room']."\n\n");
@@ -141,7 +141,8 @@ switch($req->getMethod())
 		/* a get like list query string feef=80302&type=prog
 		POST request to /feed – Create a new feed
 		POST request to /prog/feed -create a new prog for feed
-		POST request to /prog/ -create a new location	*/
+		POST request to /prog/ -create a new location
+		POST request to /zone/80302	*/
 		switch($type){
 			case 'feed':
 				break;
@@ -171,6 +172,7 @@ switch($req->getMethod())
 			//ckHolds($db, $path);
 			//$se = getSetptArr($db, $path);
 			//$se=addDefIfprog0($se);
+			$se = 1;
 			echo setptA2J($se);
 			zeroSetptArr($db, $path);					
 			//echo($retSetptStr);//"\n<0151,1152,2153>\n"
@@ -501,7 +503,7 @@ function setptA2J($se){
 		$sse = json_encode($se);
 		$sse = preg_replace( "/\"(\d+)\"/", '$1', $sse );//remove quotes from numbers
 		$sse = "\n<".$sse.">\n";
-		$ss = "\n<[155,115,151,138,115,115,115,0,0,0,0,0]>\n";
+		$ss = "\n<[151,115,148,147,115,115,115,0,0,0,0,0]>\n";
 		//-----------LR  Mu  2   3   P  Ma  TV---hard code setpts
 		return $ss;
 }
