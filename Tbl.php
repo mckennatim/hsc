@@ -40,6 +40,10 @@ class Tbl {
 		}
 		$this->whereStr = substr_replace($ws ,"",-4);
 	}
+	public function selectWhere()
+	{
+		return $this->whereStr;
+	}
 	public function deleteWhere(){
 		$this->wherestr='';
 	}

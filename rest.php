@@ -186,7 +186,7 @@ class RestRequest
 	{
 		$this->request_vars		= array();
 		$this->data				= '';
-		$this->http_accept		= $_SERVER['HTTP_ACCEPT'];
+		$this->http_accept		= '' ;//$_SERVER['HTTP_ACCEPT'];
 		$this->method			= 'get';
 	}
 	public function setTimeStamp($request_time){
@@ -217,10 +217,12 @@ class RestRequest
 	{
 		return $this->method;
 	}
+	/*
 	public function getHttpAccept()
 	{
 		return $this->http_accept;
-	}	
+	}
+	*/	
 	public function getJson(){
 		return $this->json;
 	}

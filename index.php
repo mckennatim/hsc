@@ -167,10 +167,10 @@ switch($req->getMethod())
 		switch($type){
 		case 'feed':
 			//echo("\nin case:put, case:feed of index.php, sending this back to microcontroller\n");
-			//getTodayLTEnow($db, $path);
-			//$se = getSetptArr($db, $path);
-			//ckHolds($db, $path);
-			//$se = getSetptArr($db, $path);
+			getTodayLTEnow($db, $path);
+			$se = getSetptArr($db, $path);
+			ckHolds($db, $path);
+			$se = getSetptArr($db, $path);
 			//$se=addDefIfprog0($se);
 			$se = 1;
 			echo setptA2J($se);
@@ -182,7 +182,7 @@ switch($req->getMethod())
 			$data=$req->getData();
 			//echo "soulld be about to print data";	
 			//print_r($data);	
-			//$ibr =getLastCktEntries($db,$feed);	//object of last entries
+			$ibr =getLastCktEntries($db,$feed);	//object of last entries
 			$jibr=json_encode($ibr[0]);
 			//echo($jibr);	
 			$i=0;	
@@ -503,7 +503,7 @@ function setptA2J($se){
 		$sse = json_encode($se);
 		$sse = preg_replace( "/\"(\d+)\"/", '$1', $sse );//remove quotes from numbers
 		$sse = "\n<".$sse.">\n";
-		$ss = "\n<[151,115,148,147,115,115,115,0,0,0,0,0]>\n";
+		$ss = "\n<[156,115,156,149,115,115,115,0,0,0,0,0]>\n";
 		//-----------LR  Mu  2   3   P  Ma  TV---hard code setpts
 		return $ss;
 }
