@@ -171,9 +171,10 @@ switch($req->getMethod())
 			$se = getSetptArr($db, $path);
 			ckHolds($db, $path);
 			$se = getSetptArr($db, $path);
-			//$se=addDefIfprog0($se);
-			$se = 1;
+			$se=addDefIfprog0($se);
+			//$se = 1;
 			echo setptA2J($se);
+			ChromePhp::log(setptA2J($se));
 			zeroSetptArr($db, $path);					
 			//echo($retSetptStr);//"\n<0151,1152,2153>\n"
 			/*PUT request to /feed/80308 – Update feed with additional data */	
@@ -220,7 +221,7 @@ switch($req->getMethod())
 			//$data=json_decode('{"start":1363707975,"finish":1363688100,"setpt":167}',true);
 			print_r($data);
 			insertHold($db,$path,$data);				
-			echo $setptJ;			
+			//echo $setptJ;			
 			break;	
 		case 'prog':
 			/*	PUT request to /prog/80302/ver/ckt/day*/	
@@ -503,9 +504,10 @@ function setptA2J($se){
 		$sse = json_encode($se);
 		$sse = preg_replace( "/\"(\d+)\"/", '$1', $sse );//remove quotes from numbers
 		$sse = "\n<".$sse.">\n";
-		$ss = "\n<[156,115,156,149,115,115,115,0,0,0,0,0]>\n";
+		//$ss = "\n<[156,115,146,149,115,115,115,0,0,0,0,0]>\n";
 		//-----------LR  Mu  2   3   P  Ma  TV---hard code setpts
-		return $ss;
+
+		return $sse;
 }
 
 function getSetptArr($db, $path){

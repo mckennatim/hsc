@@ -2,7 +2,7 @@
 class Tbl {
 	public $tblname;
 	public $insarr;
-	public $insFieldStr;
+	public $fieldStr;
 	public $insValStr;
 	public $insWcolon;
 	public $insSql;
@@ -26,9 +26,9 @@ class Tbl {
 			$inf .= '`'. $key.'`, ' ;
 			$inv .= $newkey.', ' ;
 		}
-		$this->insFieldStr = substr_replace($inf ,") ",-2);
+		$this->fieldStr = substr_replace($inf ,") ",-2);
 		$this->insValStr = substr_replace($inv ,") ",-2);
-		$this->insSql='INSERT INTO `'. $this->tblname .'`'. $this->insFieldStr . ' VALUES'. $this->insValStr ;
+		$this->insSql='INSERT INTO `'. $this->tblname .'`'. $this->fieldStr . ' VALUES'. $this->insValStr ;
 	}
 	public function getLastRec(){
 
@@ -42,10 +42,32 @@ class Tbl {
 	}
 	public function selectWhere()
 	{
-		return $this->whereStr;
+		$db=$this->dbo;
+		$whereQry= 'SELECT '. $this->fieldStr.' FROM '.$this->tblname . $this->whereStr;
+		try {
+			$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
+			$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$sql  = $whereQry;
+			$stmt = $dbh->prepare($sql);
+			$stmt->execute();
+			$result = $stmt->fetchAll(PDO::FETCH_OBJ);
+			return $result;
+		} catch(PDOException $e) {
+	      	echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
+		}  	
 	}
 	public function deleteWhere(){
-		$this->wherestr='';
+		$db=$this->dbo;
+		$delQry= 'DELETE FROM '.$this->tblname . $this->whereStr;
+		try {
+			$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
+			$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$sql  = $delQry;
+			$stmt = $dbh->prepare($sql);
+			$stmt->execute();
+		} catch(PDOException $e) {
+	      	echo '{"error":{"text":'. $e->getMessage() .$sql.'}}'; 
+		}  	
 	}
 	public function pdo_insert(){
 		$db=$this->dbo;
