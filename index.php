@@ -571,7 +571,7 @@ function getTodayLTEnow($db, $path){
 	try {
 		$dbh  = new PDO("mysql:host=$db->host; dbname=$db->database",$db->user, $db->pass);
 		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		$sql  = 'SELECT ckt, setpt , MAX( clock ) FROM progs WHERE ver="current" AND feed ="'.$feed.'" AND day="'.$dow.'" AND clock<"'.$ti.'" GROUP BY ckt ORDER BY ckt, clock DESC';
+		$sql  = 'SELECT * FROM (SELECT ckt, setpt , clock FROM progs WHERE ver="current" AND feed ="'.$feed.'" AND day="'.$dow.'" AND clock<"'.$ti.'" ORDER BY ckt, clock DESC) as duck GROUP BY ckt';
 		$stmt = $dbh->prepare($sql);
 		$stmt->execute();
 		while($result = $stmt->fetch()){
