@@ -5,11 +5,30 @@ class RestUtils
 {
 	public static function processRequest()
 	{
+		
 		// get our verb 
 		$request_method = strtolower($_SERVER['REQUEST_METHOD']);
 		$request_time = $_SERVER['REQUEST_TIME'];
-		$headers = apache_request_headers();
+		//getallheaders doesn't exist and acpache_get_headers not nginx
+		if (!function_exists('getallheaders')) 
+		{ 
+		    function getallheaders() 
+		    { 
+		           $headers = ''; 
+		       foreach ($_SERVER as $name => $value) 
+		       { 
+		           if (substr($name, 0, 5) == 'HTTP_') 
+		           { 
+		               $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value; 
+		           } 
+		       } 
+		       return $headers; 
+		    } 
+		} 
+		$headers = getallheaders();
 		$url = $_SERVER['REQUEST_URI'];
+		
+
 		$urlarr = parse_url($url);
 		$pathstr=substr($urlarr["path"],1);
 		$patharr= explode("/", $pathstr);

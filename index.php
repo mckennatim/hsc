@@ -10,7 +10,9 @@ include 'Tbl.php';
 ChromePhp::log("in index.php");
 
 $req = RestUtils::processRequest();
+ChromePhp::log("aft process req");
 $path =$req->getPathArr();
+($req->getPathArr());
 $now = $req->getTimeStamp();
 $type = $path[1];//feed or prog or boho
 $feed = $path[2];	//the feed number
@@ -20,13 +22,13 @@ $params = array();
 $params['MAXCKTS']=12;
 $progArr= array(1,1,1,1,1,1,1,0,0,0,0,0);
 $params['programmable']=$progArr;
-$params['defaultLo']=65;
+$params['defaultLo']=56;
 //$db->setDb($path[0]);
 //$retSetptStr="\n\n<[1180,3182,4173,5174,6176]>\n";
 //$retSetptStr="<[130,130,130,0 ,0,130,0,0,160,169, 170,190]>\n";
 //echo($req->getMethod());
 /*
-198.23.156.78/hsc/feed/80302?room=all
+198.23.253.29/hsc/feed/80302?room=all
 
 print_r($req->getHttpAccept());
 print_r($req->getJson());
@@ -37,6 +39,7 @@ echo $json."\n\n";
 echo $req->getTimeStamp() ."\n"; 
 echo date('l jS \of F Y h:i:s A', $req->getTimeStamp()). "\n\n";
 */
+ChromePhp::log("before switch method");
 
 switch($req->getMethod())
 	{
@@ -83,6 +86,7 @@ switch($req->getMethod())
 				echo($progJSON);
 				break;
 			case 'boho':
+				ChromePhp::log("in boho");
 				$boholist = getBohoList($db, $path);
 				$bohoListJSON= '{"items":'. json_encode($boholist) .'}';
 				echo($bohoListJSON);			
